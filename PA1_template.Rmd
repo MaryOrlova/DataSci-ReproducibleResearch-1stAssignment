@@ -1,0 +1,219 @@
+#Coursera Reproducible Research 1st Assignment - Activity Monitoring
+
+
+-------------------------------------------------------------------
+
+Author: Marija Orlova
+
+08.2016
+
+-------------------------------------------------------------------- 
+
+
+Loading packages that are used during analysis
+
+```{r, echo=TRUE, results = 'hide', warning=FALSE, message=FALSE}
+library(ggplot2)
+library(data.table)
+library(Hmisc)
+                  
+```
+
+--------------------------------------------------------------------------------
+
+### Loading, reading in the dataset and processing the data
+
+Downloading data on 5-min walk test if there isn't one in working directory
+
+```{r, echo=TRUE}
+if (!file.exists("activity.csv")) {
+  url<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+  download.file(url, destfile = "activity.zip")
+  unzip("activity.zip")
+  file.remove("activity.zip")
+}
+```
+
+Loading "activity.csv" data in R
+
+```{r, echo=TRUE}
+a<-read.csv("activity.csv", header=TRUE, sep=",")
+```
+
+Changing date variable class to date.
+
+```{r, echo=TRUE}
+a$date<-as.Date(a$date, "%Y-%m-%d")
+```
+
+-------------------------------------------------------------------------------------------------
+
+## Analysis of total count of steps taken during day (ignoring NAs)
+
+--------------------------------------------------------------------------------------------------
+
+Calculating total steps taken each day.
+
+```{r, echo=TRUE}
+stepsbydate<-aggregate(x=a["steps"], by=list(date=a$date), FUN="sum", na.rm=TRUE)
+```
+
+### Plotting histogram of the total number of steps taken each day
+
+Plotting histogram of total steps count by day
+
+```{r, echo=TRUE}
+h<-ggplot(data=stepsbydate,aes(stepsbydate$steps))+geom_histogram(binwidth = 500)+ labs(title="Total count of staps taken during day", x ="Steps (NAs ingnored)", y= "Frequency")
+h
+```
+
+### Mean and median number of steps taken each day
+
+Calculating mean and median of steps by each day
+
+```{r, echo=TRUE}
+StepMed<-median(stepsbydate$steps, na.rm=TRUE)
+StepMean<-mean(stepsbydate$steps, na.rm=TRUE)
+```
+
+---------------------------------------------------------------------------------------------------
+
+The mean is `r StepMean` and the median is `r StepMed`.
+
+---------------------------------------------------------------------------------------------------
+
+## Analysis of average count of steps for 5-min time periods
+
+-----------------------------------------------------------------------------------------------------
+
+Calculating average steps count over time intervals
+```{r, echo=TRUE}
+stepsbyinterval<-aggregate(x=a["steps"], by=list(interval=a$interval), FUN="mean", na.rm=TRUE)
+```
+
+Plotting average stapes taken by interval
+
+
+```{r, echo=TRUE}
+g<- ggplot(data=stepsbyinterval, aes(x=interval, y=steps)) + geom_line() + labs(title="Time series plot of the average number of steps taken", x ="5-min interval", y= "Average steps count")
+g
+```
+
+
+The 5-minute interval that, on average, contains the maximum number of steps
+
+```{r, echo = TRUE}
+maxint<-stepsbyinterval[which.max(stepsbyinterval$steps),"interval"]
+```
+
+------------------------------------------------------------------------------------------------------
+
+On average `r maxint` interval contains the maximum number of steps.
+
+------------------------------------------------------------------------------------------------------
+
+## Imputation
+
+------------------------------------------------------------------------------------------------------
+
+### Calculate and report the total number of missing values in the dataset
+
+Claculating how many rows in original dataset contains NA values.
+
+```{r, echo=TRUE}
+Narow<-sum(!complete.cases(a))
+```
+
+----------------------------------------------
+
+Total number of rows with NAs is `r Narow`.
+
+----------------------------------------------
+
+### Imputing missing data
+
+Creating new data frame
+```{r, echo =TRUE}
+new<-a
+```
+
+Replacing all NAs in steps variable with average count of steps.
+
+```{r, echo =TRUE}
+new$steps<-impute(new$steps, mean)
+```
+
+Checking if there are any missing values left in data frame.
+
+```{r, echo=TRUE}
+na<-sum(!complete.cases(new))
+```
+
+---------------------------------------------------
+
+There are `r na` cases left with missing values.
+
+----------------------------------------------------
+
+### Histogram of the total number of steps taken each day 
+
+Calculating totak count of steps taken each day using new imputed data frame
+
+```{r, echo=TRUE}
+stepsbydateimp<-aggregate(x=new["steps"], by=list(date=new$date), FUN="sum")
+```
+
+Plotting histogram of total steps count each day.
+
+
+```{r, echo=TRUE}
+h2<-ggplot(data=stepsbydateimp,aes(stepsbydateimp$steps))+geom_histogram(binwidth = 500)+ labs(title="Total count of steps taken during day", x ="Steps (Imputed values)", y= "Frequency")
+h2
+```
+
+
+###Mean and median total number of steps 
+
+Calculating mean and median of steps by each day using imputed data.
+
+```{r, echo=TRUE}
+StepMedimp<-median(stepsbydateimp$steps)
+StepMeanimp<-mean(stepsbydateimp$steps)
+```
+
+-----------------------------------------------------------------------------------------------
+
+Average steps count ignoring NAs was `r StepMean`, after imputation average is `r StepMeanimp`.
+
+Median of steps count ignoring NAs was `r StepMed`, after imputation median is `r StepMedimp`.
+
+Difference between mean and median after imputation `r StepMedimp-StepMeanimp`.
+
+------------------------------------------------------------------------------------------------
+
+## Average staps during time intervals during weekdays and weekends
+
+------------------------------------------------------------------------------------------------
+
+Creating a factor variable depending on given date is a weekday or weekend day
+
+```{r, echo=TRUE}
+new$day<-as.POSIXlt(new$date)$wday
+new$wd<-ifelse(new$day %in% c(0,6), "weekend", "weekday")
+new$wd<-as.factor(new$wd)
+```
+
+Calculating average count of steps taken per 5-min interval depending on date (weekend and weekday).
+
+```{r, echo=TRUE}
+bywd<-aggregate(x=new["steps"], by=list(interval=new$interval,wday=new$wd),mean)
+```
+
+Creting panel plot.
+
+
+```{r, echo=TRUE}
+z<-ggplot(bywd, aes(x=interval, y=steps)) + geom_line() +facet_grid(.~wday) +labs(title="Average number of steps taken per 5-minute interval across weekdays and weekends", x ="5-min interval", y= "Average steps (imputed values)")
+z
+```
+
