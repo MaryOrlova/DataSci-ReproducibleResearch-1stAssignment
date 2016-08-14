@@ -1,4 +1,4 @@
-#Coursera Reproducible Research 1st Assignment - Activity Monitoring
+# Coursera Reproducible Research 1st Assignment - Activity Monitoring
 
 
 -------------------------------------------------------------------
@@ -23,7 +23,7 @@ library(Hmisc)
 
 ### Loading, reading in the dataset and processing the data
 
-Downloading data on 5-min walk test if there isn't one in working directory
+Downloading data on 5-min walking test if it isn' in working directory.
 
 
 ```r
@@ -55,28 +55,24 @@ a$date<-as.Date(a$date, "%Y-%m-%d")
 
 --------------------------------------------------------------------------------------------------
 
-Calculating total steps taken each day.
+Before plotting histogram we need to calculate total steps taken each day.
 
 
 ```r
 stepsbydate<-aggregate(x=a["steps"], by=list(date=a$date), FUN="sum", na.rm=TRUE)
 ```
 
-### Plotting histogram of the total number of steps taken each day
-
-Plotting histogram of total steps count by day
+Now let's plott histogram of total steps count by day.
 
 
 ```r
-h<-ggplot(data=stepsbydate,aes(stepsbydate$steps))+geom_histogram(binwidth = 500)+ labs(title="Total count of staps taken during day", x ="Steps (NAs ingnored)", y= "Frequency")
+h<-ggplot(data=stepsbydate,aes(stepsbydate$steps))+geom_histogram(binwidth = 500)+ labs(title="Total count of steps taken during day", x ="Steps (NAs ingnored)", y= "Frequency")
 h
 ```
 
 ![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png)
 
-### Mean and median number of steps taken each day
-
-Calculating mean and median of steps by each day
+Now let's find out what mean and median of steps by each day are.
 
 
 ```r
@@ -88,6 +84,8 @@ StepMean<-mean(stepsbydate$steps, na.rm=TRUE)
 
 The mean is 9354.2295082 and the median is 10395.
 
+Difference between average and median is 1040.7704918.
+
 ---------------------------------------------------------------------------------------------------
 
 ## Analysis of average count of steps for 5-min time periods
@@ -96,12 +94,12 @@ The mean is 9354.2295082 and the median is 10395.
 
 Calculating average steps count over time intervals
 
+
 ```r
 stepsbyinterval<-aggregate(x=a["steps"], by=list(interval=a$interval), FUN="mean", na.rm=TRUE)
 ```
 
 Plotting average stapes taken by interval
-
 
 
 ```r
@@ -112,7 +110,7 @@ g
 ![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png)
 
 
-The 5-minute interval that, on average, contains the maximum number of steps
+Let's fing out at which 5-min interval maximum number of steps was made.
 
 
 ```r
@@ -129,8 +127,6 @@ On average 835 interval contains the maximum number of steps.
 
 ------------------------------------------------------------------------------------------------------
 
-### Calculate and report the total number of missing values in the dataset
-
 Claculating how many rows in original dataset contains NA values.
 
 
@@ -146,13 +142,16 @@ Total number of rows with NAs is 2304.
 
 ### Imputing missing data
 
-Creating new data frame
+To impute missing values this script will replace all NAs with average values calculated from dataset.
+
+First of all let's create new data frame.
+
 
 ```r
 new<-a
 ```
 
-Replacing all NAs in steps variable with average count of steps.
+And using impute function let's replacing NAs in steps variable with average count of steps.
 
 
 ```r
@@ -172,9 +171,9 @@ There are 0 cases left with missing values.
 
 ----------------------------------------------------
 
-### Histogram of the total number of steps taken each day 
+Let's plot histogram of the total number of steps taken each day using data set with imuped missing values and see how it differs from first one histogram, where missing values were ignored. 
 
-Calculating totak count of steps taken each day using new imputed data frame
+First of all, we need to calculate total count of steps taken each day using new imputed data frame as we done it before plotting first histogram.
 
 
 ```r
@@ -184,7 +183,6 @@ stepsbydateimp<-aggregate(x=new["steps"], by=list(date=new$date), FUN="sum")
 Plotting histogram of total steps count each day.
 
 
-
 ```r
 h2<-ggplot(data=stepsbydateimp,aes(stepsbydateimp$steps))+geom_histogram(binwidth = 500)+ labs(title="Total count of steps taken during day", x ="Steps (Imputed values)", y= "Frequency")
 h2
@@ -192,10 +190,7 @@ h2
 
 ![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png)
 
-
-###Mean and median total number of steps 
-
-Calculating mean and median of steps by each day using imputed data.
+Now lets calculate mean and median total number of steps using new dataset with imputed values to see how they've changed. 
 
 
 ```r
@@ -213,11 +208,11 @@ Difference between mean and median after imputation 0.
 
 ------------------------------------------------------------------------------------------------
 
-## Average staps during time intervals during weekdays and weekends
+## Average steps during 5-min time intervals during weekdays and weekends
 
 ------------------------------------------------------------------------------------------------
 
-Creating a factor variable depending on given date is a weekday or weekend day
+Firstly, let's create a factor variable depending on given date is a weekday or weekend day.
 
 
 ```r
@@ -226,15 +221,14 @@ new$wd<-ifelse(new$day %in% c(0,6), "weekend", "weekday")
 new$wd<-as.factor(new$wd)
 ```
 
-Calculating average count of steps taken per 5-min interval depending on date (weekend and weekday).
+Now let's calculate average count of steps taken per 5-min interval depending on date (weekend or weekday).
 
 
 ```r
 bywd<-aggregate(x=new["steps"], by=list(interval=new$interval,wday=new$wd),mean)
 ```
 
-Creting panel plot.
-
+And finally let's creting panel plot and see difference between activity patterns during weekdays and weekends.
 
 
 ```r
